@@ -58,6 +58,33 @@ class UserType(dict):
         self._db = db
         return Result
 
+
+class ChatType(dict):
+    _id: int
+    order: str
+    currentpin: str
+    datepin: datetime.datetime
+
+    def __init__(self, *args, **kwargs):
+        super(ChatType, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
+    def updatedb(self, db: Collection):
+        self._db = db
+
+    async def save(self) -> UpdateResult:
+        """
+        Перезаписывает документ чата по айди
+        """
+        db = self._db
+        del self["_db"]
+        Result = await db.replace_one({"_id": self._id}, self, True)
+        self._db = db
+        return Result
+
+
 clear_user_type = {"_id": None, "name": None, "ban": False, "profile": {"order": None, "leader": False, "admin": False, "power": 0,
               "original": None, "updatetime": datetime.datetime.fromtimestamp(0), "stats": {"power": 0, "defence": 0,
               "agility": 0, "instinct": 0, "life": 0}}}
+
+clear_chat_type = {"_id": None, "order": None, "currentpin": r"¯\_(ツ)_/¯", "datepin": datetime.datetime.fromtimestamp(0)}
