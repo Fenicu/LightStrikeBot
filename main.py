@@ -6,7 +6,7 @@ from loguru import logger
 
 import config as cfg
 from gamebot.profile import UpdateFullProfile, UpdateSmallProfile
-from orders.register import NewChat
+from orders.register import NewChat, RegisterNewOrder, DeleteOrder
 from support import ponyfilters
 from support.bothelper import NothingCallback, bot, dp, errors
 from support.middleware import UserMiddleware
@@ -25,7 +25,8 @@ dp.filters_factory.bind(ponyfilters.AdminFilter, event_handlers=[dp.message_hand
 dp.register_message_handler(NewChat, is_addbot=True, content_types=types.ContentTypes.NEW_CHAT_MEMBERS)
 dp.register_message_handler(UpdateFullProfile, is_pod=True, regexp=r"Компактный профиль \/compact")
 dp.register_message_handler(UpdateSmallProfile, is_pod=True, regexp=r"Полный профиль \/full")
-
+dp.register_message_handler(RegisterNewOrder, is_botadmin=True, commands=["create_order"])
+dp.register_message_handler(DeleteOrder, is_botadmin=True, commands=["delete_order"])
 
 dp.register_errors_handler(errors)
 dp.register_callback_query_handler(NothingCallback)
