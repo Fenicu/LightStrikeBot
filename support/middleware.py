@@ -14,6 +14,8 @@ class UserMiddleware(BaseMiddleware):
     async def on_pre_process_message(self, message: types.Message, data: dict):
         if message.from_user.id == 777000: # не обрабатываем сообщения от телеграма
             raise CancelHandler()
+        elif message.from_user.is_bot: # и от ботов
+            raise CancelHandler()
 
         user = await bothelper.db_users.find_one({"_id": message.from_user.id})
         if not user:
@@ -66,7 +68,7 @@ class UserMiddleware(BaseMiddleware):
             chat = update.message.chat
 
 
-        Chat = ponytypes.UserType(ctype)
+        Chat = ponytypes.ChatType(ctype)
         Chat._id = chat.id
         Chat.updatedb(bothelper.db_chats)
         await Chat.save()
