@@ -8,3 +8,8 @@ async def NewChat(message: types.Message, User: ponytypes.UserType, Chat: ponyty
         await message.answer("Вы не можете меня добавить")
         await message.chat.leave()
         return
+
+    Chat.order = User.profile.order
+    await Chat.save()
+    out = f"Чату присвоен орден: {Chat.order}"
+    await message.answer(out)

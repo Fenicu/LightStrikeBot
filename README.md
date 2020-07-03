@@ -9,7 +9,6 @@
 
 ```python
 from aiogram import types
-from aiomongo import Collection
 from support import ponytypes
 
 async def funcname(message: types.Message, User: ponytypes.UserType):
@@ -23,8 +22,7 @@ async def funcname(call: types.CallbackQuery, User: ponytypes.UserType):
     await call.answer(output, show_alert=True)
 
 async def funcname(message: types.Message, Chat: ponytypes.ChatType):
-    output = "Welcome has been disabled"
     Chat.order = "Чат геев"
     await Chat.save()
-    await message.answer(output)
+    await message.answer(Chat.order)
 ```
