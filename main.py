@@ -6,7 +6,7 @@ from loguru import logger
 
 import config as cfg
 from gamebot.profile import UpdateFullProfile, UpdateSmallProfile
-from orders.register import NewChat, RegisterNewOrder, DeleteOrder
+from orders import register
 from support import ponyfilters
 from support.bothelper import NothingCallback, bot, dp, errors
 from support.middleware import UserMiddleware
@@ -22,11 +22,15 @@ dp.filters_factory.bind(ponyfilters.LeaderFilter, event_handlers=[dp.message_han
 dp.filters_factory.bind(ponyfilters.AdminFilter, event_handlers=[dp.message_handlers, dp.callback_query_handlers])
 
 
-dp.register_message_handler(NewChat, is_addbot=True, content_types=types.ContentTypes.NEW_CHAT_MEMBERS)
-dp.register_message_handler(UpdateFullProfile, is_pod=True, regexp=r"Компактный профиль \/compact")
-dp.register_message_handler(UpdateSmallProfile, is_pod=True, regexp=r"Полный профиль \/full")
-dp.register_message_handler(RegisterNewOrder, is_botadmin=True, commands=["create_order"])
-dp.register_message_handler(DeleteOrder, is_botadmin=True, commands=["delete_order"])
+dp.register_message_handler(register.NewChat, is_addbot=True, content_types=types.ContentTypes.NEW_CHAT_MEMBERS)
+dp.register_message_handler(UpdateFullProfile, types.ChatType.is_private, is_pod=True, regexp=r"Компактный профиль \/compact")
+dp.register_message_handler(UpdateSmallProfile, types.ChatType.is_private, is_pod=True, regexp=r"Полный профиль \/full")
+dp.register_message_handler(register.RegisterNewOrder, is_botadmin=True, commands=["create_order"])
+dp.register_message_handler(register.DeleteOrder, is_botadmin=True, commands=["delete_order"])
+dp.register_message_handler(register.NewLeader, types.ChatType.is_group_or_super_group,
+    is_reply=True, is_botadmin=True, commands=["new_leader"])
+dp.register_message_handler(register.RemoveLeader, types.ChatType.is_group_or_super_group,
+    is_reply=True, is_botadmin=True, commands=["del_leader"])
 
 dp.register_errors_handler(errors)
 dp.register_callback_query_handler(NothingCallback)
