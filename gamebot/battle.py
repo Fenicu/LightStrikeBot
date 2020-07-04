@@ -86,13 +86,17 @@ async def SendPinToOrder(call: types.CallbackQuery, jsondata: dict, User: ponyty
     await order.save()
     await db_battle.replace_one({"_id": nextbattle}, battle)
     out = f"Битва {nextbattle.strftime('%d/%m/%Y %H:%M')}\nЦель: {order.currentpin}\n\nГотовность:\n"
+    power = 0
+    sumpower = 0
     async with db_users.find({"profile.order": User.profile.order}).batch_size(10) as cursor:
         async for user in cursor:
             if user["_id"] in battle.targets[order.currentpin][User.profile.order]:
                 out += f":white_heavy_check_mark: {user['name']}\n"
+                power += user["profile"]["power"]
             else:
                 out += f":zzz: {user['name']}\n"
-    
+            sumpower += user["profile"]["power"]
+    out += f"Сила отряда: {power}/{sumpower}"
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(types.InlineKeyboardButton("Готов", callback_data="ready"))
     msg = await bothelper.bot.send_message(order._id, emoji.emojize(out), reply_markup=keyboard)
@@ -130,12 +134,17 @@ async def GetReady(call: types.CallbackQuery, User: ponytypes.UserType):
     order = await db_chats.find_one({"order": User.profile.order})
     order = ponytypes.ChatType(order)
     out = f"Битва {nextbattle.strftime('%d/%m/%Y %H:%M')}\nЦель: {order.currentpin}\n\nГотовность:\n"
+    power = 0
+    sumpower = 0
     async with db_users.find({"profile.order": User.profile.order}).batch_size(10) as cursor:
         async for user in cursor:
             if user["_id"] in battle.targets[order.currentpin][User.profile.order]:
                 out += f":white_heavy_check_mark: {user['name']}\n"
+                power += user["profile"]["power"]
             else:
                 out += f":zzz: {user['name']}\n"
+            sumpower += user["profile"]["power"]
+    out += f"Сила отряда: {power}/{sumpower}"
     keyboard = types.InlineKeyboardMarkup(row_width=2)
     keyboard.add(types.InlineKeyboardButton("Готов", callback_data="ready"))
     await call.message.edit_text(emoji.emojize(out), reply_markup=keyboard)
