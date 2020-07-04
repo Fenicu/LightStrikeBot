@@ -15,7 +15,11 @@ async def UpdateFullProfile(message: types.Message, User: ponytypes.UserType):
         await message.answer("Пришли мне профиль свежее 30 секунд")
         return
     demoji = emoji.demojize(message.text)
-    _order: str = search(r"(:.*:).* \/order", demoji).group(1)
+    try:
+        _order: str = search(r"(:.*:).* \/order", demoji).group(1)
+    except:
+        await message.answer("Ты не состоишь в ордене")
+        return
     User.profile.stats.power = int(search(r":flexed_biceps:Сила:.*\((\d+)\)", demoji).group(1))
     User.profile.stats.defence = int(search(r":shield:Защита:.*\((\d+)\)", demoji).group(1))
     User.profile.stats.agility = int(search(r":person_running:Прыть:.*\((\d+)\)", demoji).group(1))

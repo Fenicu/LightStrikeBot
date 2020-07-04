@@ -12,6 +12,7 @@ client = None
 db_chats = None
 db_users = None
 db_orders = None
+db_battle = None
 settings = None
 
 
@@ -24,6 +25,7 @@ async def StartDB():
     global db_chats
     global db_users
     global db_orders
+    global db_battle
     global settings
 
     client = await create_client(config.mongoURI)
@@ -31,6 +33,7 @@ async def StartDB():
     db_chats = db.Chats
     db_users = db.Users
     db_orders = db.Orders
+    db_battle = db.Battle
     settings = db.Settings
     logger.info("database is running")
 

@@ -1,5 +1,5 @@
 import datetime
-
+from typing import Dict, List
 from aiomongo import Collection
 from pymongo.results import UpdateResult
 
@@ -81,6 +81,16 @@ class ChatType(dict):
         Result = await db.replace_one({"_id": self._id}, self, True)
         self._db = db
         return Result
+
+
+class Battle(dict):
+    _id: datetime.datetime
+    targets: Dict[str, Dict[str, List[int]]]
+    battel_panel: int
+
+    def __init__(self, *args, **kwargs):
+        super(Battle, self).__init__(*args, **kwargs)
+        self.__dict__ = self
 
 
 clear_user_type = {"_id": None, "name": None, "ban": False, "profile": {"order": None, "leader": False, "admin": False, "power": 0,
