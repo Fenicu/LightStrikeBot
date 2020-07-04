@@ -1,3 +1,6 @@
+from ast import literal_eval
+from typing import Union
+
 from aiogram import types
 from aiogram.dispatcher.filters import BoundFilter
 from aiogram.dispatcher.handler import ctx_data
@@ -78,3 +81,37 @@ class AdminFilter(BoundFilter):
         if User.profile.admin:
             return True
         return False
+
+class JsonCallbackDataFilter(BoundFilter):
+    """
+    Фильтр сверяет ключи/значения в callback data по заданным ключам
+    """
+
+    key = 'json_check'
+    def __init__(self, json_check: Union[dict, str]):
+        if isinstance(json_check, dict):
+            self.type = type(json_check)
+            self.json = json_check
+        elif isinstance(json_check, str):
+            self.type = type(json_check)
+            self.json = json_check
+        else:
+            raise TypeError(f"json must be dict or str, not {type(json_check)}")
+
+    async def check(self, call: types.CallbackQuery):
+        try:
+            calldata: dict = literal_eval(call.data)
+            if not isinstance(calldata, dict):
+                raise TypeError()
+        except:
+            return False
+        if self.type == dict:
+            for key, value in self.json.items():
+                if key not in calldata:
+                    return False
+                if not calldata[key] == value:
+                    return False
+        elif self.type == str:
+            if not self.json in calldata:
+                return False
+        return {'jsondata': calldata}

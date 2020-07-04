@@ -86,7 +86,6 @@ class ChatType(dict):
 class Battle(dict):
     _id: datetime.datetime
     targets: Dict[str, Dict[str, List[int]]]
-    battel_panel: int
 
     def __init__(self, *args, **kwargs):
         super(Battle, self).__init__(*args, **kwargs)

@@ -6,7 +6,7 @@ from loguru import logger
 
 import config as cfg
 from gamebot.profile import UpdateFullProfile, UpdateSmallProfile
-from gamebot.battle import NewGlobalBattleMessage
+from gamebot.battle import NewGlobalBattleMessage, SendPinToOrder
 from orders import register
 from support import ponyfilters
 from support.bothelper import NothingCallback, bot, dp, errors
@@ -19,10 +19,13 @@ logger.add(stdout, colorize=True, format="<green>{time:DD.MM.YY H:mm:ss}</green>
 dp.middleware.setup(UserMiddleware())
 dp.filters_factory.bind(ponyfilters.BotAddFilter, event_handlers=[dp.message_handlers])
 dp.filters_factory.bind(ponyfilters.PodGameFilter, event_handlers=[dp.message_handlers])
+dp.filters_factory.bind(ponyfilters.JsonCallbackDataFilter, event_handlers=[dp.callback_query_handlers])
 dp.filters_factory.bind(ponyfilters.LeaderFilter, event_handlers=[dp.message_handlers, dp.callback_query_handlers])
 dp.filters_factory.bind(ponyfilters.AdminFilter, event_handlers=[dp.message_handlers, dp.callback_query_handlers])
 
-dp.register_message_handler(NewGlobalBattleMessage, is_pod=True, content_types=types.ContentTypes.PHOTO, regexp=r"Плодородные земли")
+dp.register_message_handler(NewGlobalBattleMessage, is_botadmin=True, is_pod=True,
+    content_types=types.ContentTypes.PHOTO, regexp=r"Плодородные земли")
+dp.register_callback_query_handler(SendPinToOrder, is_leader=True, json_check="attack")
 
 dp.register_message_handler(register.NewChat, is_addbot=True, content_types=types.ContentTypes.NEW_CHAT_MEMBERS)
 dp.register_message_handler(UpdateFullProfile, types.ChatType.is_private, is_pod=True, regexp=r"Компактный профиль \/compact")
@@ -34,7 +37,7 @@ dp.register_message_handler(register.NewLeader, types.ChatType.is_group_or_super
 dp.register_message_handler(register.RemoveLeader, types.ChatType.is_group_or_super_group,
     is_reply=True, is_botadmin=True, commands=["del_leader"])
 
-dp.register_errors_handler(errors)
+#dp.register_errors_handler(errors)
 dp.register_callback_query_handler(NothingCallback)
 
 async def on_startup(dp):

@@ -40,6 +40,34 @@ class UserMiddleware(BaseMiddleware):
         data["Chat"] = chat
 
 
+    async def on_pre_process_callback_query(self, callback_query: types.CallbackQuery, data: dict):
+        if callback_query.from_user.id == 777000: # не обрабатываем сообщения от телеграма
+            raise CancelHandler()
+        elif callback_query.from_user.is_bot: # и от ботов
+            raise CancelHandler()
+
+        user = await bothelper.db_users.find_one({"_id": callback_query.from_user.id})
+        if not user:
+            user = await self.CreateNewUser(callback_query)
+        else:
+            user = ponytypes.UserType(user)
+            user.updatedb(bothelper.db_users)
+
+        if user.ban:
+            raise CancelHandler()
+
+        data["User"] = user
+
+        chat = None
+        if callback_query.message.chat.type != "private":
+            chat = await bothelper.db_chats.find_one({"_id": callback_query.message.chat.id})
+            if not chat:
+                chat = await self.CreateNewChat(callback_query)
+            else:
+                chat = ponytypes.ChatType(chat)
+                chat.updatedb(bothelper.db_chats)
+        data["Chat"] = chat
+
     async def CreateNewUser(self, update) -> ponytypes.UserType:
         """
         Создание документа для пользователя
