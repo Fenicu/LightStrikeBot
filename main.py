@@ -23,6 +23,13 @@ dp.filters_factory.bind(ponyfilters.JsonCallbackDataFilter, event_handlers=[dp.c
 dp.filters_factory.bind(ponyfilters.LeaderFilter, event_handlers=[dp.message_handlers, dp.callback_query_handlers])
 dp.filters_factory.bind(ponyfilters.AdminFilter, event_handlers=[dp.message_handlers, dp.callback_query_handlers])
 
+async def Welcome(message: types.Message):
+    out = "Я бот боевик стороны Света\nСкинь мне свой профиль!"
+    await message.answer(out)
+
+
+
+
 dp.register_message_handler(NewGlobalBattleMessage, is_botadmin=True, is_pod=True,
     content_types=types.ContentTypes.PHOTO, regexp=r"Плодородные земли")
 dp.register_callback_query_handler(SendPinToOrder, is_leader=True, json_check="attack")
@@ -37,7 +44,8 @@ dp.register_message_handler(register.NewLeader, types.ChatType.is_group_or_super
 dp.register_message_handler(register.RemoveLeader, types.ChatType.is_group_or_super_group,
     is_reply=True, is_botadmin=True, commands=["del_leader"])
 
-#dp.register_errors_handler(errors)
+dp.register_message_handler(Welcome, types.ChatType.is_private)
+dp.register_errors_handler(errors)
 dp.register_callback_query_handler(NothingCallback)
 
 async def on_startup(dp):

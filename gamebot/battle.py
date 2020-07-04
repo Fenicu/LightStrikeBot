@@ -50,7 +50,11 @@ async def NewGlobalBattleMessage(message: types.Message):
     keyboard.add(*buttons)
 
     await db_battle.insert_one(battle)
-    await message.answer(emoji.emojize(out), reply_markup=keyboard)
+    msg = await message.answer(emoji.emojize(out), reply_markup=keyboard)
+    try:
+        await msg.pin(True)
+    except:
+        pass
 
 
 async def SendPinToOrder(call: types.CallbackQuery, jsondata: dict, User: ponytypes.UserType):
@@ -69,10 +73,9 @@ async def SendPinToOrder(call: types.CallbackQuery, jsondata: dict, User: ponyty
         return
     order = ponytypes.ChatType(order)
     order.updatedb(db_chats)
-    for v in battle.targets.values():
+    for k, v in battle.targets.items():
         if User.profile.order in v:
-            await call.answer("Пин уже был дан", True)
-            return
+            del battle.targets[k][User.profile.order]
     battle.targets[jsondata["attack"]][User.profile.order] = [] # Пиздец я запаковал это говно
     order.currentpin = jsondata["attack"]
     order.datepin = dt.now()
