@@ -1,3 +1,5 @@
+import re
+
 import emoji
 from aiogram import types
 from aiogram.utils.markdown import hlink
@@ -24,13 +26,13 @@ async def NewChat(message: types.Message, User: ponytypes.UserType, Chat: ponyty
 
     Chat.order = User.profile.order
     await Chat.save()
-    out = f"Чату присвоен орден: {Chat.order}"
+    out = f"Чату присвоен орден: {emoji.emojize(Chat.order)}"
     await message.answer(out)
 
 
 async def RegisterNewOrder(message: types.Message):
     from support.bothelper import db_orders
-    order_icon = emoji.emoji_lis(message.text)[0]["emoji"]
+    order_icon = re.search(r"(:.*:)", emoji.demojize(message.text)).group(1)
     order = await db_orders.find_one({"_id": order_icon})
     if order:
         await message.answer("Такой ордер уже существует, ты чо, пёс")
@@ -41,7 +43,7 @@ async def RegisterNewOrder(message: types.Message):
 
 async def DeleteOrder(message: types.Message):
     from support.bothelper import db_orders
-    order_icon = emoji.emoji_lis(message.text)[0]["emoji"]
+    order_icon = re.search(r"(:.*:)", emoji.demojize(message.text)).group(1)
     result = await db_orders.delete_one({"_id": order_icon})
     if result.deleted_count > 0:
         await message.answer(f"Ордер: {order_icon} был удалён")
@@ -58,7 +60,7 @@ async def NewLeader(message: types.Message):
     User.updatedb(db_users)
     User.profile.leader = True
     await User.save()
-    await message.answer(f"{userlink} был назначен главой {User.profile.order}")
+    await message.answer(f"{userlink} был назначен главой {emoji.emojize(User.profile.order)}")
 
 
 async def RemoveLeader(message: types.Message):
@@ -71,4 +73,4 @@ async def RemoveLeader(message: types.Message):
     User.updatedb(db_users)
     User.profile.leader = False
     await User.save()
-    await message.answer(f"{userlink} был разжалован с поста главы ордена {User.profile.order}")
+    await message.answer(f"{userlink} был разжалован с поста главы ордена {emoji.emojize(User.profile.order)}")

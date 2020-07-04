@@ -14,12 +14,13 @@ async def UpdateFullProfile(message: types.Message, User: ponytypes.UserType):
     if datediff.total_seconds() > 30:
         await message.answer("Пришли мне профиль свежее 30 секунд")
         return
-    _order: str = emoji.emoji_lis(message.text)[0]["emoji"]
-    User.profile.stats.power = int(search(r"💪Сила:.*\((\d+)\)", message.text).group(1))
-    User.profile.stats.defence = int(search(r"🛡Защита:.*\((\d+)\)", message.text).group(1))
-    User.profile.stats.agility = int(search(r"🏃Прыть:.*\((\d+)\)", message.text).group(1))
-    User.profile.stats.instinct = int(search(r"🕶Интуиция:.*\((\d+)\)", message.text).group(1))
-    User.profile.stats.life = int(search(r"💗Живучесть:.*\((\d+)\)", message.text).group(1))
+    demoji = emoji.demojize(message.text)
+    _order: str = search(r"(:.*:).* \/order", demoji).group(1)
+    User.profile.stats.power = int(search(r":flexed_biceps:Сила:.*\((\d+)\)", demoji).group(1))
+    User.profile.stats.defence = int(search(r":shield:Защита:.*\((\d+)\)", demoji).group(1))
+    User.profile.stats.agility = int(search(r":person_running:Прыть:.*\((\d+)\)", demoji).group(1))
+    User.profile.stats.instinct = int(search(r":sunglasses:Интуиция:.*\((\d+)\)", demoji).group(1))
+    User.profile.stats.life = int(search(r":growing_heart:Живучесть:.*\((\d+)\)", demoji).group(1))
     order = await db_orders.find_one({"_id": _order})
     if not order:
         await message.answer("Ты None чтоли?\nУхади")
