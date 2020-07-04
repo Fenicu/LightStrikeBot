@@ -46,6 +46,24 @@ class PodGameFilter(BoundFilter):
                 return True
         return False
 
+class MemberFilter(BoundFilter):
+    """
+    Фильтр только для членов ордена
+    """
+
+    key = 'is_member'
+
+    def __init__(self, is_member: bool):
+        if is_member is False:
+            raise ValueError("is_member cannot be False")
+
+    async def check(self, message: types.Message):
+        data = ctx_data.get()
+        User: ponytypes.UserType = data["User"]
+        if User.profile.order:
+            return True
+        return False
+
 class LeaderFilter(BoundFilter):
     """
     Фильтр только для лидеров кланов

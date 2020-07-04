@@ -6,7 +6,7 @@ import emoji
 from aiogram import types
 from loguru import logger
 
-from support import ponytypes, bothelper
+from support import bothelper, ponytypes
 
 pattern1 = re.compile(r"^:crossed_swords:.*(:.*: и :.*:)", re.MULTILINE) # ⚔️Между 📦 и 🌺
 pattern2 = re.compile(r"^:crossed_swords:.*(:.*:)", re.MULTILINE) # ⚔️За 🌿
@@ -60,16 +60,20 @@ async def NewGlobalBattleMessage(message: types.Message):
 async def SendPinToOrder(call: types.CallbackQuery, jsondata: dict, User: ponytypes.UserType):
     from support.bothelper import db_battle
     from support.bothelper import db_chats
+    from support.bothelper import db_users
 
     nextbattle = nextbattletime()
     battle = await db_battle.find_one({"_id": nextbattle})
-    if not battle or battle["_id"] != nextbattle:
+    if not battle:
         await call.answer("Битва не найдена", True)
         return
     battle = ponytypes.Battle(battle)
     order = await db_chats.find_one({"order": User.profile.order})
     if not order:
         await call.answer("У вашего ордера не назначен чат", True)
+        return
+    if jsondata["attack"] not in battle.targets:
+        await call.answer("Такого направления нет")
         return
     order = ponytypes.ChatType(order)
     order.updatedb(db_chats)
@@ -81,15 +85,61 @@ async def SendPinToOrder(call: types.CallbackQuery, jsondata: dict, User: ponyty
     order.datepin = dt.now()
     await order.save()
     await db_battle.replace_one({"_id": nextbattle}, battle)
-    out = f"Битва {nextbattle.strftime('%d/%m/%Y %H:%M')}\nЦель: {order.currentpin}"
+    out = f"Битва {nextbattle.strftime('%d/%m/%Y %H:%M')}\nЦель: {order.currentpin}\n\nГотовность:\n"
+    async with db_users.find({"profile.order": User.profile.order}).batch_size(10) as cursor:
+        async for user in cursor:
+            if user["_id"] in battle.targets[order.currentpin][User.profile.order]:
+                out += f":white_heavy_check_mark: {user['name']}\n"
+            else:
+                out += f":zzz: {user['name']}\n"
+    
     keyboard = types.InlineKeyboardMarkup(row_width=2)
-    keyboard.add(types.InlineKeyboardButton("Готовность", callback_data="ready"))
+    keyboard.add(types.InlineKeyboardButton("Готов", callback_data="ready"))
     msg = await bothelper.bot.send_message(order._id, emoji.emojize(out), reply_markup=keyboard)
     try:
         await msg.pin(True)
     except:
         pass
     await call.answer("Пин отправлен")
+
+async def GetReady(call: types.CallbackQuery, User: ponytypes.UserType):
+    from support.bothelper import db_battle
+    from support.bothelper import db_chats
+    from support.bothelper import db_users
+
+    nextbattle = nextbattletime()
+    battle = await db_battle.find_one({"_id": nextbattle})
+    if not battle:
+        await call.answer("Битва не найдена", True)
+        return
+    battle = ponytypes.Battle(battle)
+
+    for v in battle.targets.values():
+        if User.profile.order in v:
+            if call.from_user.id not in v[User.profile.order]:
+                v[User.profile.order].append(call.from_user.id)
+                await call.answer("Во имя Света!")
+                break
+            else:
+                await call.answer("Ты уже готов!", True)
+                return
+        else:
+            await call.answer("Ожидай нового пина!", True)
+            return
+    await db_battle.replace_one({"_id": nextbattle}, battle)
+    order = await db_chats.find_one({"order": User.profile.order})
+    order = ponytypes.ChatType(order)
+    out = f"Битва {nextbattle.strftime('%d/%m/%Y %H:%M')}\nЦель: {order.currentpin}\n\nГотовность:\n"
+    async with db_users.find({"profile.order": User.profile.order}).batch_size(10) as cursor:
+        async for user in cursor:
+            if user["_id"] in battle.targets[order.currentpin][User.profile.order]:
+                out += f":white_heavy_check_mark: {user['name']}\n"
+            else:
+                out += f":zzz: {user['name']}\n"
+    keyboard = types.InlineKeyboardMarkup(row_width=2)
+    keyboard.add(types.InlineKeyboardButton("Готов", callback_data="ready"))
+    await call.message.edit_text(emoji.emojize(out), reply_markup=keyboard)
+    await call.answer()
 
 
 def nextbattletime():
